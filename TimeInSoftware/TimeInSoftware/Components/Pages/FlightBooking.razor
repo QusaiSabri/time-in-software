@@ -1,0 +1,100 @@
+﻿@page "/flights"
+@rendermode InteractiveServer
+@using MudBlazor
+@using TimeInSoftware.Data
+@using TimeInSoftware.Models
+@inject ApplicationDbContext dbContext
+
+<MudPopoverProvider />
+
+<h1 class="text-xl">Search Flights</h1>
+
+<div Class="flex flex-row gap-4">
+    <MudAutocomplete T="string" Label="From?" @bind-Value="fromCity" SearchFunc="@Search1" Variant="Variant.Outlined" Strict=false Margin="Margin.None" />
+    <MudIcon Icon="@Icons.Material.Filled.FlightTakeoff" Style="font-size: 2rem; align-self: center;" />
+    <MudAutocomplete T="string" Label="To?" @bind-Value="toCity" SearchFunc="@Search1" Variant="Variant.Outlined" Strict=false Margin="Margin.None" />
+    <MudDatePicker Label="Departure Date" @bind-Date="date" Variant="Variant.Outlined" />
+    <MudIcon Icon="@Icons.Material.Filled.Search" Style="font-size: 2rem; align-self: center;" onclick="@ShowFakeResults" />
+    <MudButton OnClick="@ShowFakeResults">Search</MudButton>
+</div>
+
+@foreach (var result in searchResults)
+{
+    <MudCard Class="my-2 bg-white rounded shadow-md">
+        <MudCardContent Class="flex gap-4 justify-content-between">
+            <p class="text-lg font-semibold text-gray-700">@result</p>
+            <MudButton OnClick="@BookAsync" Color="Color.Primary" Variant="Variant.Filled">Book</MudButton>
+        </MudCardContent>
+    </MudCard>
+}
+
+@code {
+
+    DateTime? date = DateTime.Today;
+
+    private string fromCity;
+    private string toCity;
+
+    private List<string> searchResults = new List<string>();
+
+    private string[] cities =
+    {
+          "Dallas",
+          "Madrid",
+          "New York",
+          "Los Angeles",
+          "Chicago",
+          "Houston",
+          "Phoenix",
+          "Philadelphia",
+          "San Antonio",
+          "San Diego",
+          "San Jose",
+          "Austin",
+          "Jacksonville",
+          "Fort Worth",
+          "Columbus",
+          "Charlotte",
+          "San Francisco",
+          "Indianapolis",
+          "Seattle",
+          "Denver",
+          "Washington",
+          "Boston",
+          "Istanbul"
+    };
+
+    private async Task<IEnumerable<string>> Search1(string value)
+    {
+        // In real life use an asynchronous function for fetching data from an api.
+        await Task.Delay(1);
+
+        // if text is null or empty, show complete list
+        if (string.IsNullOrEmpty(value))
+            return cities;
+        return cities.Where(x => x.Contains(value, StringComparison.InvariantCultureIgnoreCase));
+    }
+
+    private void ShowFakeResults()
+    {
+        searchResults.Clear();
+        searchResults.Add("Flight 1: Dallas to Madrid - March-11-2024 @ 7:00 AM");
+        searchResults.Add("Flight 2: Dallas to Madrid - March-11-2024 @ 5:00 PM");
+        searchResults.Add("Flight 3: Dallas to Madrid - March-11-2024 @ 10:00 PM");
+
+    }
+
+    private async Task BookAsync()
+    {
+        var newBooking = new BookingDetails
+            {
+                FlightNumber = "FN123",
+                DepartureTimeUTC = DateTime.UtcNow,
+                OrderDate = DateTime.Now
+            };
+
+        dbContext.BookingDetails.Add(newBooking);
+        await dbContext.SaveChangesAsync();
+    }
+}
+
